@@ -22,16 +22,35 @@ jobs:
     - name: Setup Gradle Environment
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Locate Project and Build APK
+    - name: Safe Locate and Build APK
       run: |
-        PROJECT_DIR=$(dirname $(find . -name "settings.gradle.kts" -o -name "settings.gradle" | head -n 1))
-        echo "Found project directory at: $PROJECT_DIR"
+        # Search for any Gradle build or settings file safely
+        TARGET_FILE=$(find . -type f \( -name "settings.gradle.kts" -o -name "settings.gradle" -o -name "build.gradle.kts" -o -name "build.gradle" \) | head -n 1)
+
+        if [ -n "$TARGET_FILE" ]; then
+          PROJECT_DIR=$(dirname "$TARGET_FILE")
+        else
+          PROJECT_DIR="."
+        fi
+
+        echo "Project directory: $PROJECT_DIR"
         cd "$PROJECT_DIR"
-        
+
+        # Create settings file if completely missing
+        if [ ! -f "settings.gradle.kts" ] && [ ! -f "settings.gradle" ]; then
+          echo 'rootProject.name = "CyberTool"' > settings.gradle.kts
+          if [ -d "app" ]; then
+            echo 'include(":app")' >> settings.gradle.kts
+          fi
+        fi
+
+        # Generate wrapper if missing
         if [ ! -f "gradlew" ]; then
           gradle wrapper
         fi
         chmod +x gradlew
+
+        # Execute debug build
         ./gradlew assembleDebug --stacktrace --no-daemon
 
     - name: Upload APK
