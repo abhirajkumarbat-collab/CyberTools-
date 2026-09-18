@@ -22,7 +22,7 @@ jobs:
     - name: Setup Gradle Environment
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Guarantee Gradle Wrapper
+    - name: Ensure Executable Gradlew
       run: |
         if [ ! -f "gradlew" ]; then
           gradle wrapper
