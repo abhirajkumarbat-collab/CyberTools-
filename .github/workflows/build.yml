@@ -22,18 +22,20 @@ jobs:
     - name: Setup Gradle Environment
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Guarantee Gradle Wrapper
+    - name: Locate Project and Build APK
       run: |
+        PROJECT_DIR=$(dirname $(find . -name "settings.gradle.kts" -o -name "settings.gradle" | head -n 1))
+        echo "Found project directory at: $PROJECT_DIR"
+        cd "$PROJECT_DIR"
+        
         if [ ! -f "gradlew" ]; then
           gradle wrapper
         fi
         chmod +x gradlew
-
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace --no-daemon
+        ./gradlew assembleDebug --stacktrace --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: CyberTool-Debug-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: "**/app/build/outputs/apk/debug/*.apk"
